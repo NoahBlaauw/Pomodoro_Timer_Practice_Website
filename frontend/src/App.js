@@ -1,77 +1,56 @@
 import { useState, useEffect } from 'react';
-
-import logo from './logo.svg';
 import './App.css';
 
-
-
-
 function App() {
-  const [junk, setJunk] = useState(["wunker", "bunker", "Aron"]);
+  // 30 minutes in seconds
+  const POMODORO_TIME = 30 * 60;
 
-  function junkToList(){
-    let listOJunk = junk.map(n => <li key = {n}>{n}</li>);
-    return listOJunk;
+  const [timeLeft, setTimeLeft] = useState(POMODORO_TIME);
+  const [isRunning, setIsRunning] = useState(true);
+
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isRunning]);
+
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
 
-  function handleClick(){
-    fetch('/api/junk')
-    .then(res => {return res.json()})
-    .then(val => {setJunk(val)})
+  function resetTimer() {
+    setTimeLeft(POMODORO_TIME);
+    setIsRunning(true);
   }
 
-  // return (
-  //   <div className="App">
-  //     <h1>List O Junk</h1>
-  //     <ul>
-  //       {junkToList()}
-  //     </ul>
+  return (
+    <div className="app">
+      <h1 className="title">POMODORO</h1>
 
-  //     <button onClick = {handleClick}>Click here to get backend junk</button>
-  //   </div>
-  // );
+      <div className="timer-box">
+        <span className="time">{formatTime(timeLeft)}</span>
+      </div>
 
-  //-----------------------------------------------clock stuff
-  const [time, setTime] = useState('');
-
-function FormatTime(val){
-  if(val < 10){
-    return '0'
-  }else{
-    return '';
-  }
-} //used to add 0s to the start of single digit numbers
-
-useEffect(() => {
-  tick();
-  const timerID = setInterval(() => {
-    const d = new Date();
-    const h = d.getHours();
-    const m = d.getMinutes();
-    const s = d.getSeconds();
-
-    setTime(FormatTime(h) + h + ":" + FormatTime(m) + m + ":" + FormatTime(s) + s);
-  }, 1000);
-
-  return () => clearInterval(timerID);
-}, [])
-
-function tick(){
-
-
-}
-
-return(
-  <div className = 'clock'>
-    <h1 className = "Time">{time}</h1>
-  </div>
-)
-
-
-
+      <div className="controls">
+        <button onClick={() => setIsRunning(!isRunning)}>
+          {isRunning ? 'Pause' : 'Start'}
+        </button>
+        <button onClick={resetTimer}>Reset</button>
+      </div>
+    </div>
+  );
 }
 
 export default App;
-
-
-
